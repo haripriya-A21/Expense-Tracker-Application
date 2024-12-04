@@ -1,0 +1,158 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+
+class Expense {
+    String description;
+    double amount;
+
+    Expense(String description, double amount) {
+        this.description = description;
+        this.amount = amount;
+    }
+}
+
+class ExpenseTracker {
+    private double totalIncome;
+    private double savingsGoal;
+    private ArrayList<Expense> expenses;
+
+    public ExpenseTracker(double totalIncome, double savingsGoal) {
+        this.totalIncome = totalIncome;
+        this.savingsGoal = savingsGoal;
+        this.expenses = new ArrayList<>();
+    }
+
+    public void addExpense(String description, double amount) {
+        expenses.add(new Expense(description, amount));
+    }
+
+    public double getTotalExpenses() {
+        double total = 0;
+        for (Expense expense : expenses) {
+            total += expense.amount;
+        }
+        return total;
+    }
+
+    public double getRemainingBalance() {
+        return totalIncome - getTotalExpenses();
+    }
+
+    public String checkSavingsGoal() {
+        double remainingBalance = getRemainingBalance();
+        if (remainingBalance >= savingsGoal) {
+            return "You are on track to meet your savings goal!";
+        } else {
+            return "Warning: You are below your savings goal by $" + (savingsGoal - remainingBalance);
+        }
+    }
+}
+
+public class ExpenseTrackerApp extends Frame implements ActionListener {
+    TextField incomeField, savingsGoalField, expenseDescField, expenseAmountField;
+    TextArea outputArea;
+    Button addExpenseBtn, viewExpensesBtn, viewBalanceBtn, checkGoalBtn;
+    ExpenseTracker tracker;
+
+    public ExpenseTrackerApp() {
+        setTitle("Expense Tracker");
+        setSize(500, 400);
+        setLayout(new FlowLayout());
+
+        Label incomeLabel = new Label("Total Monthly Income: ");
+        incomeField = new TextField(15);
+        add(incomeLabel);
+        add(incomeField);
+
+        Label savingsLabel = new Label("Monthly Savings Goal: ");
+        savingsGoalField = new TextField(15);
+        add(savingsLabel);
+        add(savingsGoalField);
+
+        Button initTrackerBtn = new Button("Initialize Tracker");
+        initTrackerBtn.addActionListener(e -> initializeTracker());
+        add(initTrackerBtn);
+
+        Label expenseDescLabel = new Label("Expense Description: ");
+        expenseDescField = new TextField(15);
+        add(expenseDescLabel);
+        add(expenseDescField);
+
+        Label expenseAmountLabel = new Label("Expense Amount: ");
+        expenseAmountField = new TextField(15);
+        add(expenseAmountLabel);
+        add(expenseAmountField);
+
+        addExpenseBtn = new Button("Add Expense");
+        addExpenseBtn.addActionListener(this);
+        add(addExpenseBtn);
+
+        viewExpensesBtn = new Button("View Total Expenses");
+        viewExpensesBtn.addActionListener(this);
+        add(viewExpensesBtn);
+
+        viewBalanceBtn = new Button("View Remaining Balance");
+        viewBalanceBtn.addActionListener(this);
+        add(viewBalanceBtn);
+
+        checkGoalBtn = new Button("Check Savings Goal");
+        checkGoalBtn.addActionListener(this);
+        add(checkGoalBtn);
+
+        outputArea = new TextArea(10, 50);
+        add(outputArea);
+
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                System.exit(0);
+            }
+        });
+
+        setVisible(true);
+    }
+
+    public void initializeTracker() {
+        try {
+            double income = Double.parseDouble(incomeField.getText());
+            double savingsGoal = Double.parseDouble(savingsGoalField.getText());
+            tracker = new ExpenseTracker(income, savingsGoal);
+            outputArea.setText("Tracker initialized!\nIncome: $" + income + "\nSavings Goal: $" + savingsGoal);
+        } catch (NumberFormatException ex) {
+            outputArea.setText("Invalid input. Please enter numeric values for income and savings goal.");
+        }
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (tracker == null) {
+            outputArea.setText("Please initialize the tracker first.");
+            return;
+        }
+
+        if (e.getSource() == addExpenseBtn) {
+            String desc = expenseDescField.getText();
+            try {
+                double amount = Double.parseDouble(expenseAmountField.getText());
+                if (amount > 0) {
+                    tracker.addExpense(desc, amount);
+                    outputArea.setText("Expense added: " + desc + " - $" + amount);
+                } else {
+                    outputArea.setText("Expense amount must be positive.");
+                }
+            } catch (NumberFormatException ex) {
+                outputArea.setText("Invalid amount. Please enter a numeric value.");
+            }
+        } else if (e.getSource() == viewExpensesBtn) {
+            outputArea.setText("Total Expenses: $" + tracker.getTotalExpenses());
+        } else if (e.getSource() == viewBalanceBtn) {
+            outputArea.setText("Remaining Balance: $" + tracker.getRemainingBalance());
+        } else if (e.getSource() == checkGoalBtn) {
+            outputArea.setText(tracker.checkSavingsGoal());
+        }
+    }
+
+    public static void main(String[] args) {
+        new ExpenseTrackerApp();
+    }
+}
